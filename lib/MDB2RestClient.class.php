@@ -164,7 +164,7 @@ class MDB2RestClient
     $results = $this->request($request);
     
     if (isset($results['error'])) {
-      throw new Exception($results->error);
+      throw new Exception($results['error']);
     } else {
       return $results;
     }
