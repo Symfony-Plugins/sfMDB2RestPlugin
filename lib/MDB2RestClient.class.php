@@ -9,9 +9,11 @@
  */
 class MDB2RestClient
 {
-  protected $serverUrl  = null,
-            $username   = null,
-            $password   = null;
+  protected $serverUrl      = null,
+            $username       = null,
+            $password       = null,
+            $batch          = false,
+            $batchRequests  = array();
   
   /**
    * __construct
@@ -22,6 +24,42 @@ class MDB2RestClient
   public function __construct($serverUrl)
   {
     $this->serverUrl = $serverUrl;
+  }
+  
+  /**
+   * startBatch
+   *
+   * @return void
+   */
+  public function startBatch()
+  {
+    $this->batch = true;
+  }
+
+  /**
+   * endBatch
+   *
+   * @return void
+   */
+  public function endBatch()
+  {
+    $this->batch = false;
+    
+    return $this->retrieveBatchResults();
+  }
+  
+  /**
+   * retrieveBatchResults
+   * 
+   * @return void
+   */
+  protected function retrieveBatchResults()
+  {
+    $request = array('method' => 'batch', 'arguments' => $this->batchRequests);
+
+    $results = $this->request($request);
+
+    return $this->processRequestResults($results);
   }
   
   /**
@@ -66,7 +104,7 @@ class MDB2RestClient
     curl_close($ch);
     $results = ob_get_contents();
     ob_end_clean();
-    
+
     return unserialize($results);
   }
   
@@ -161,12 +199,26 @@ class MDB2RestClient
   {
     $request = array('method' => $method, 'arguments' => $arguments);
     
-    $results = $this->request($request);
-    
-    if (isset($results['error'])) {
-      throw new Exception($results['error']);
+    if ($this->batch) {
+      $this->batchRequests[] = $request;
     } else {
-      return $results;
+      $results = $this->request($request);
+      
+      return $this->processRequestResults($results);
     }
+  }
+  
+  /**
+   * processRequestResults
+   * 
+   * @param array $results
+   */
+  protected function processRequestResults($results)
+  {
+      if (isset($results['error'])) {
+        throw new Exception($results['error']);
+      } else {
+        return $results;
+      }
   }
 }

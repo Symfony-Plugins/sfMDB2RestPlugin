@@ -92,16 +92,47 @@ class MDB2RestServer
   {
     $request = unserialize($this->request['data']);
     
+    $results = $this->executeRequest($request);
+    
+    echo serialize($results);
+  }
+  
+  /**
+   * executeRequest
+   *
+   * @param array $request
+   */
+  protected function executeRequest($request)
+  {
     $method = $request['method'];
     $arguments = $request['arguments'];
     
-    $results = $this->$method($arguments);
+    try {
+      $results = $this->$method($arguments);
     
-    if ($results instanceof MDB2_error) {
-      $results = array('error' => $results->getMessage());
+      if ($results instanceof MDB2_error) {
+        $results = array('error' => $results->getMessage());
+      }
+    } catch (Exception $e) {
+      $results = array('error' => $e->getMessage());
     }
-    
-    echo serialize($results);
+
+    return $results;
+  }
+  
+  /**
+   * batch
+   *
+   * @param array $arguments
+   */
+  public function batch($arguments)
+  {
+    $results = array();
+    foreach ($arguments as $request) {
+      $results[] = $this->executeRequest($request);
+    }
+
+    return $results;
   }
   
   /**
