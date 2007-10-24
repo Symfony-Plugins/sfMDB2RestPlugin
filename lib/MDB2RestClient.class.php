@@ -56,6 +56,9 @@ class MDB2RestClient
   protected function retrieveBatchResults()
   {
     $request = array('method' => 'batch', 'arguments' => $this->batchRequests);
+    
+    //clear out the batchRequests array
+    $this->batchRequests = array();
 
     $results = $this->request($request);
 
