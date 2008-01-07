@@ -107,7 +107,7 @@ class MDB2RestClient
     curl_close($ch);
     $results = ob_get_contents();
     ob_end_clean();
-
+    
     return unserialize($results);
   }
   
@@ -189,6 +189,11 @@ class MDB2RestClient
   public function queryRow($query, $types = null, $fetchmode = 4)
   {
     return $this->execute(__FUNCTION__, get_defined_vars());
+  }
+  
+  public function getServerUrl()
+  {
+    return $this->serverUrl;
   }
   
   /**
