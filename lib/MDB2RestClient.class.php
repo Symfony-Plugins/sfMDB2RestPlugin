@@ -95,19 +95,25 @@ class MDB2RestClient
    */
   protected function request($request)
   {
+    $this->_logToSymfony('Starting the request');
     $url  = strstr($this->serverUrl, '?') ? $this->serverUrl . '&':$this->serverUrl . '?';
     $url .= 'username=' . $this->username . '&password=' . $this->password;
     
+    $this->_logToSymfony('Starting the curl object');
     ob_start();
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, array('data' => serialize($request)));
+    $this->_logToSymfony('Executing the request');
     curl_exec($ch);
+    $this->_logToSymfony('closing the connection');
     curl_close($ch);
+    $this->_logToSymfony('Getting the contents of the request');
     $results = ob_get_contents();
     ob_end_clean();
     
+    $this->_logToSymfony('Unserializing and returing...');
     return unserialize($results);
   }
   
@@ -228,5 +234,13 @@ class MDB2RestClient
       } else {
         return $results;
       }
+  }
+  
+  protected function _logToSymfony($message)
+  {
+    if (sfConfig::get('sf_logging_enabled'))
+    {
+      sfContext::getInstance()->getLogger()->info($message);
+    }
   }
 }
