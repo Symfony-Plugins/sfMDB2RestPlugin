@@ -116,7 +116,8 @@ class MDB2RestServer
     } catch (Exception $e) {
       $results = array('error' => $e->getMessage());
     }
-
+    
+    
     return $results;
   }
   
@@ -128,10 +129,40 @@ class MDB2RestServer
   public function batch($arguments)
   {
     $results = array();
+    
+    if ($this->mdb2->supports('transactions'))
+    {
+      $this->mdb2->beginTransaction();
+    }
+    
     foreach ($arguments as $request) {
       $results[] = $this->executeRequest($request);
     }
-
+    
+    if ($this->mdb2->supports('transactions') && $this->mdb2->in_transaction)
+    {
+      $errors = array();
+      $i = 0;
+      foreach($results as $r)
+      {
+        if(isset($r['error']))
+        {
+          
+          $errors[$i] = $r['error'];
+        }
+        $i++;
+      }
+      if(sizeof($errors) > 0)
+      {
+        $results['transaction_errors'] = $errors;
+        $this->mdb2->rollback();
+      }
+      else
+      {
+        $this->mdb2->commit();
+      }
+    }
+    
     return $results;
   }
   

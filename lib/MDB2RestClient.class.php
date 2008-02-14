@@ -114,6 +114,8 @@ class MDB2RestClient
     ob_end_clean();
     
     $this->_logToSymfony('Unserializing and returing...');
+    $this->_logToSymfony($results);
+    
     return unserialize($results);
   }
   
@@ -231,6 +233,8 @@ class MDB2RestClient
   {
       if (isset($results['error'])) {
         throw new Exception($results['error']);
+      } elseif (isset($results['transaction_errors'])) {
+        throw new Exception(print_r($results['transaction_errors']));
       } else {
         return $results;
       }
